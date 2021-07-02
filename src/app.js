@@ -1,14 +1,21 @@
 (() => {
     const express = require('express');
     const session = require('express-session');
-    const MongoStore = require('connect-mongodb-session')(session);
+    const MongoStore = require('connect-mongo');
+    const passport = require('passport');
 
     const app = express();
-    const usersMW = require('./api/routers/users');
+    const usersRouter = require('./api/routers/users');
 
-    const store = new MongoStore({
-        uri: process.env.DB_URL,
-        collection: 'session'
+    const store = MongoStore.create({
+        mongoUrl: process.env.DB_URL,
+        mongoOptions: {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        },
+        crypto: {
+            secret: process.env.SECRET
+        }
     });
 
     app.use(express.json());
@@ -23,8 +30,15 @@
             maxAge: 1000 * 60 * 60 * 24
         }
     }));
+    app.use(passport.initialize());
+    app.use(passport.session());
+    app.use((req,res,next) => {
+        console.log(req.session);
+        console.log(req.user);
+        next();
+    });
 
-    app.use('/users', usersMW);
+    app.use('/users', usersRouter);
 
     module.exports = app;
 })();
