@@ -23,6 +23,16 @@ const userSchema = new Schema({
         unique: true,
         required: true
     },
+    firstname: {
+        type: String,
+        trim: true,
+        required: true
+    },
+    lastname: {
+        type: String,
+        trim: true,
+        required: true
+    },
     password: {
         type: String,
         trim: true,
@@ -35,6 +45,18 @@ const userSchema = new Schema({
                 return val;
             }
         }
+    },
+    tfaSecret: {
+        type: String,
+        trim: true
+    },
+    tmpSecret: {
+        type: String,
+        trim: true
+    },
+    tmpOTPAuth: {
+        type: String,
+        trim: true
     },
     createdAt: {
         type: Date,
