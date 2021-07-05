@@ -48,11 +48,13 @@ const userSchema = new Schema({
     },
     tfaSecret: {
         type: String,
-        trim: true
+        trim: true,
+        default: null
     },
     tmpSecret: {
         type: String,
-        trim: true
+        trim: true,
+        default: null
     },
     tmpOTPAuth: {
         type: String,
