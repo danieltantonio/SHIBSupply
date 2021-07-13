@@ -30,9 +30,11 @@
 
     passport.deserializeUser((userID, done) => {
         User.findById(userID).then(user => {
+            let isVerified = user.tfaSecret && user.emailVerified ? true : false;
             const cleanUser = {
                 _id: user.id,
-                email: user.email
+                email: user.email,
+                verified: isVerified
             }
 
             done(null, cleanUser);

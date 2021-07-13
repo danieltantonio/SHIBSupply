@@ -12,7 +12,7 @@
 
     router.get('/', (req, res) => {
         User.find().then(data => {
-            res.status(200).send(data);
+            res.status(200).json(data);
         }).catch(err => {
             res.status(500).send(err);
         });
@@ -39,7 +39,7 @@
             }); // temporary
 
             const msg = {
-                to: process.env.TEST_EMAIL,
+                to: process.env.TEST_EMAIL, // CHANGE ME TO data.email WHEN FRONTEND IS AVAILABLE
                 from: process.env.TEST_EMAIL,
                 subject: 'SHIB Supply Email Verification',
                 html: `<p>Please verify your email by clicking the link below.</p><br />
@@ -69,7 +69,7 @@
                 return res.status(401).json({ msg: 'Access denied.' });
             } else if(!user.emailVerified) {
                 await User.findByIdAndUpdate(req.params.emailID, { emailVerified: true });
-                return res.status(201).json({ ...user, emailVerified: true });
+                return res.status(201).json({ ...user['_doc'], emailVerified: true });
             }
         } catch(err) {
             console.log(err);
