@@ -32,6 +32,7 @@
     }));
     app.use(passport.initialize());
     app.use(passport.session());
+    
     app.use('/users', usersRouter);
 
     module.exports = app;

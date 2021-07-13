@@ -7,5 +7,7 @@
         }
     };
     
-    module.exports = isAuth;
+    module.exports = {
+        isAuth
+    };
 })();

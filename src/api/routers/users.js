@@ -1,12 +1,14 @@
 (() => {
     const router = require('express').Router();
-    const passport = require('passport');
     const speakeasy = require('speakeasy');
     const bcrypt = require('bcryptjs');
     const qrcode = require('qrcode-terminal'); // temporary :)
+    const sgMail = require('@sendgrid/mail');
 
     const User = require('../../config/db/models/User');
-    const isAuth = require('../middleware/auth-mw');
+    const isAuth = require('../middleware/auth-mw').isAuth;
+    
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
     router.get('/', (req, res) => {
         User.find().then(data => {
@@ -36,10 +38,43 @@
                 console.log(url);
             }); // temporary
 
-            res.status(201).json(data);
+            const msg = {
+                to: process.env.TEST_EMAIL,
+                from: process.env.TEST_EMAIL,
+                subject: 'SHIB Supply Email Verification',
+                html: `<p>Please verify your email by clicking the link below.</p><br />
+                <a href="#">Verify Email</a>` // CHANGE ME WHEN FRONTEND IS AVAILABLE
+            };
+
+            sgMail.send(msg)
+            .then(() => {
+                res.status(201).json({ msg: 'User account created. Must verify email.' });
+            })
+            .catch(err => {
+                res.status(500).json(err);
+            });
+
         }).catch(err => {
             res.status(500).send(err);
         });
+    });
+
+    router.put('/register/:emailID/', async (req,res) => {
+        try {
+            const user = await User.findById(req.params.emailID);
+
+            if(!user) {
+                return res.status(401).json({ msg: 'Access denied.' });
+            } else if(user.emailVerified) {
+                return res.status(401).json({ msg: 'Access denied.' });
+            } else if(!user.emailVerified) {
+                await User.findByIdAndUpdate(req.params.emailID, { emailVerified: true });
+                return res.status(201).json({ ...user, emailVerified: true });
+            }
+        } catch(err) {
+            console.log(err);
+            res.status(500).json({ msg: 'Server error. Check logs.' });
+        }
     });
 
     // Used for after a user is registered and after /login.
@@ -112,6 +147,17 @@
         }
     });
 
+    // Used if a registered user wants to become a seller
+    router.put('/register/seller', isAuth, async (req,res) => {
+        try {
+            const user = await User.findByIdAndUpdate(req.user['_id'], { userType: 'seller' });
+            res.status(202).send(user);
+        } catch(err) {
+            console.log(err);
+            res.status(500).json({ msg: 'Server error. Check the logs.' });
+        }
+    });
+
     router.post('/login', (req,res) => {
         const userInfo = req.body;
         User.findBy({ email: userInfo.email })
@@ -121,7 +167,7 @@
             if(!bcrypt.compareSync(userInfo.password, user.password)) {
                 return res.status(400).json({ msg: 'Invalid credentials' });
             } else {
-                return res.status(201).json({ msg: 'User accepted' });
+                return res.status(201).json(user);
             }
         })
         .catch(err => {

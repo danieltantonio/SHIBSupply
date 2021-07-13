@@ -46,6 +46,12 @@ const userSchema = new Schema({
             }
         }
     },
+    userType: {
+        type: String,
+        enum: ['user', 'seller'],
+        required: true,
+        default: 'user'
+    },
     tfaSecret: {
         type: String,
         trim: true,
@@ -78,6 +84,11 @@ const userSchema = new Schema({
     trustedSeller: {
         type: Boolean,
         default: false
+    },
+    emailVerified: {
+        type: Boolean,
+        default: false,
+        required: true
     }
 });
 
