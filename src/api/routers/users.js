@@ -117,7 +117,7 @@
                             return res.status(500).send('Server error');
                         }
 
-                        res.status(202).json({ msg: 'User is now verified' });
+                        res.status(202).json({ user: user['_id'] });
                     });
                 }
             } else {
@@ -137,7 +137,7 @@
                    req.login(user, err => {
                        if(err) return res.status(500).json({ msg: 'Server error' });
 
-                       return res.status(202).json(user);
+                       return res.status(202).json({ user: user['_id'] });
                    });
                 }
             }
@@ -160,12 +160,14 @@
 
     router.post('/login', (req,res) => {
         const userInfo = req.body;
-        User.findBy({ email: userInfo.email })
+        User.findOne({ email: userInfo.email })
         .then(user => {
-            if(!user) return res.status(400).json({ msg: 'Invalid credentials' });
+            if(!user) {
+                return res.status(400).json({ msg: 'EMAIL Invalid credentials' });
+            };
 
             if(!bcrypt.compareSync(userInfo.password, user.password)) {
-                return res.status(400).json({ msg: 'Invalid credentials' });
+                return res.status(400).json({ msg: 'PASS Invalid credentials' });
             } else {
                 return res.status(201).json(user);
             }
@@ -175,12 +177,8 @@
         });
     });
 
-    router.get('/protected', (req, res) => {
-        if (!req.isAuthenticated()) {
-            res.send('WHO IS YOU!?');
-        } else {
-            res.send('Welcome to the club :)');
-        }
+    router.get('/protected', isAuth, (req, res) => {
+        res.status(200).json({ user: req.user['_id'] });
     });
 
     router.get('/failed', (req, res) => {
